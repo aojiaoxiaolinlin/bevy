@@ -227,7 +227,7 @@ impl RenderGraphRunner {
                 {
                     #[cfg(feature = "trace")]
                     let _span = info_span!("node", name = node_state.type_name).entered();
-
+                    // TODO: 运行节点
                     node_state.node.run(&mut context, render_context, world)?;
                 }
 

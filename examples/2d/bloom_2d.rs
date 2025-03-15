@@ -46,7 +46,7 @@ fn setup(
     commands.spawn((
         Mesh2d(meshes.add(Circle::new(100.))),
         // 4. Put something bright in a dark environment to see the effect
-        MeshMaterial2d(materials.add(Color::srgb(7.5, 0.0, 7.5))),
+        MeshMaterial2d(materials.add(Color::srgb(17.5, 0.0, 0.0))),
         Transform::from_translation(Vec3::new(-200., 0., 0.)),
     ));
 
@@ -56,6 +56,13 @@ fn setup(
         // 4. Put something bright in a dark environment to see the effect
         MeshMaterial2d(materials.add(Color::srgb(6.25, 9.4, 9.1))),
         Transform::from_translation(Vec3::new(200., 0., 0.)),
+    ));
+
+    commands.spawn((
+        Mesh2d(meshes.add(Rectangle::new(200., 200.))),
+        // 4. Put something bright in a dark environment to see the effect
+        MeshMaterial2d(materials.add(Color::srgb(0.0, 5.0, 0.0))),
+        Transform::from_translation(Vec3::new(0., 200., 0.)),
     ));
 
     // UI

@@ -197,6 +197,7 @@ pub trait RenderCommand<P: PhaseItem> {
     /// The view entity refers to the camera, or shadow-casting light, etc. from which the phase
     /// item will be rendered from.
     /// All components have to be accessed read only.
+    /// 视图实体指的是摄像机，或投射阴影的光线等，相位项将从这些光线中渲染出来。所有组件都必须以只读方式访问。
     type ViewQuery: ReadOnlyQueryData;
     /// Specifies the ECS data of the item entity required by [`RenderCommand::render`].
     ///
@@ -207,6 +208,7 @@ pub trait RenderCommand<P: PhaseItem> {
     /// render world; for instance, entities that simply consist of meshes are
     /// often not extracted. If the entity doesn't exist in the render world,
     /// the supplied query data will be `None`.
+    /// 项是将为相应视图呈现的实体。所有组件都必须以只读方式访问。
     type ItemQuery: ReadOnlyQueryData;
 
     /// Renders a [`PhaseItem`] by recording commands (e.g. setting pipelines, binding bind groups,

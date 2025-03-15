@@ -335,6 +335,13 @@ fn setup(
         Transform::from_xyz(0.0, 0.5, 0.0),
         Rotates,
     ));
+
+    commands.spawn((
+        Mesh3d(meshes.add(Sphere::default())),
+        MeshMaterial3d(materials.add(Color::srgb(0.6, 0.7, 0.8))),
+        Transform::from_xyz(1.0, 0.5, 0.0),
+        Rotates,
+    ));
     // light
     commands.spawn(DirectionalLight {
         illuminance: 1_000.,

@@ -520,8 +520,23 @@ bitflags::bitflags! {
         const HDR                               = 1 << 0;
         const TONEMAP_IN_SHADER                 = 1 << 1;
         const DEBAND_DITHER                     = 1 << 2;
-        const BLEND_ALPHA                       = 1 << 3;
         const MAY_DISCARD                       = 1 << 4;
+
+        const BLEND_RESERVED_BITS               = Self::BLEND_MASK_BITS << Self::BLEND_SHIFT_BITS;
+        const BLEND_OPAQUE                      = 0 << Self::BLEND_SHIFT_BITS;
+        const BLEND_ALPHA                       = 1 << Self::BLEND_SHIFT_BITS;
+        const BLEND_PREMULTIPLIED_ALPHA         = 2 << Self::BLEND_SHIFT_BITS;  // Premultiplied alpha blending
+        const BLEND_ADD                         = 3 << Self::BLEND_SHIFT_BITS;  // Additive blending
+        const BLEND_SUBTRACT                    = 4 << Self::BLEND_SHIFT_BITS;  // Subtractive blending
+        const BLEND_SCREEN                      = 5 << Self::BLEND_SHIFT_BITS;  // Screen blending
+        const BLEND_LIGHTEN                     = 6 << Self::BLEND_SHIFT_BITS;  // Lighten blending
+        const BLEND_DARKEN                      = 7 << Self::BLEND_SHIFT_BITS;  // Darken blending
+        const BLEND_MULTIPLY                    = 8 << Self::BLEND_SHIFT_BITS;  // Multiply blending
+        const BLEND_COLOR_BURN                  = 9 << Self::BLEND_SHIFT_BITS;  // Color Burn blending
+        const BLEND_COLOR_DODGE                 = 10 << Self::BLEND_SHIFT_BITS; // Color Dodge blending
+        const BLEND_LINEAR_BURN                 = 11 << Self::BLEND_SHIFT_BITS; // Linear Burn blending
+        const BLEND_LINEAR_DODGE                = 12 << Self::BLEND_SHIFT_BITS; // Linear Dodge blending
+
         const MSAA_RESERVED_BITS                = Self::MSAA_MASK_BITS << Self::MSAA_SHIFT_BITS;
         const PRIMITIVE_TOPOLOGY_RESERVED_BITS  = Self::PRIMITIVE_TOPOLOGY_MASK_BITS << Self::PRIMITIVE_TOPOLOGY_SHIFT_BITS;
         const TONEMAP_METHOD_RESERVED_BITS      = Self::TONEMAP_METHOD_MASK_BITS << Self::TONEMAP_METHOD_SHIFT_BITS;
@@ -544,6 +559,9 @@ impl Mesh2dPipelineKey {
     const TONEMAP_METHOD_MASK_BITS: u32 = 0b111;
     const TONEMAP_METHOD_SHIFT_BITS: u32 =
         Self::PRIMITIVE_TOPOLOGY_SHIFT_BITS - Self::TONEMAP_METHOD_MASK_BITS.count_ones();
+    const BLEND_MASK_BITS: u32 = 0b1111;
+    const BLEND_SHIFT_BITS: u32 =
+        Self::TONEMAP_METHOD_SHIFT_BITS - Self::BLEND_MASK_BITS.count_ones();
 
     pub fn from_msaa_samples(msaa_samples: u32) -> Self {
         let msaa_bits =
@@ -678,7 +696,122 @@ impl SpecializedMeshPipeline for Mesh2dPipeline {
         };
 
         let (depth_write_enabled, label, blend);
-        if key.contains(Mesh2dPipelineKey::BLEND_ALPHA) {
+        let pass = key.intersection(Mesh2dPipelineKey::BLEND_RESERVED_BITS);
+        if pass == Mesh2dPipelineKey::BLEND_COLOR_BURN {
+            label = "color_burn_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::OneMinusSrc,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_COLOR_DODGE {
+            label = "color_dodge_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::Dst,
+                    dst_factor: BlendFactor::Zero,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_LINEAR_BURN {
+            label = "linear_burn_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::One,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_LINEAR_DODGE {
+            label = "linear_dodge_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::SrcAlpha,
+                    dst_factor: BlendFactor::One,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_MULTIPLY {
+            label = "multiply_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::Dst,
+                    dst_factor: BlendFactor::OneMinusSrcAlpha,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_ADD {
+            label = "add_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::One,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_SUBTRACT {
+            label = "subtract_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::One,
+                    operation: BlendOperation::ReverseSubtract,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_SCREEN {
+            label = "screen_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::OneMinusSrc,
+                    operation: BlendOperation::Add,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_LIGHTEN {
+            label = "lighten_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::One,
+                    operation: BlendOperation::Max,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_DARKEN {
+            label = "darken_mesh2d_pipeline";
+            blend = Some(BlendState {
+                color: BlendComponent {
+                    src_factor: BlendFactor::One,
+                    dst_factor: BlendFactor::One,
+                    operation: BlendOperation::Min,
+                },
+                alpha: BlendComponent::OVER,
+            });
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_PREMULTIPLIED_ALPHA {
+            label = "premultiplied_alpha_mesh2d_pipeline";
+            blend = Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING);
+            depth_write_enabled = false;
+        } else if pass == Mesh2dPipelineKey::BLEND_ALPHA {
             label = "transparent_mesh2d_pipeline";
             blend = Some(BlendState::ALPHA_BLENDING);
             depth_write_enabled = false;

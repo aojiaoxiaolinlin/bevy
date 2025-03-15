@@ -139,6 +139,7 @@ pub trait Material2d: AsBindGroup + Asset + Clone + Sized {
         0.0
     }
 
+    /// 设置基础颜色的 alpha 通道如何用于透明度。默认为 [`AlphaMode2d::Opaque`]。
     fn alpha_mode(&self) -> AlphaMode2d {
         AlphaMode2d::Opaque
     }
@@ -248,6 +249,15 @@ pub enum AlphaMode2d {
     /// Standard alpha-blending is used to blend the fragment's color
     /// with the color behind it.
     Blend,
+    /// 滤色
+    Screen,
+    /// 增加
+    Add,
+    /// 减去
+    Subtract,
+    /// 变亮
+    Lighten,
+    Multiply,
 }
 
 /// Adds the necessary ECS resources and render logic to enable rendering entities using the given [`Material2d`]
@@ -532,6 +542,11 @@ impl<P: PhaseItem, M: Material2d, const I: usize> RenderCommand<P>
 pub const fn alpha_mode_pipeline_key(alpha_mode: AlphaMode2d) -> Mesh2dPipelineKey {
     match alpha_mode {
         AlphaMode2d::Blend => Mesh2dPipelineKey::BLEND_ALPHA,
+        AlphaMode2d::Screen => Mesh2dPipelineKey::BLEND_SCREEN,
+        AlphaMode2d::Add => Mesh2dPipelineKey::BLEND_ADD,
+        AlphaMode2d::Subtract => Mesh2dPipelineKey::BLEND_SUBTRACT,
+        AlphaMode2d::Lighten => Mesh2dPipelineKey::BLEND_LIGHTEN,
+        AlphaMode2d::Multiply => Mesh2dPipelineKey::BLEND_MULTIPLY,
         AlphaMode2d::Mask(_) => Mesh2dPipelineKey::MAY_DISCARD,
         _ => Mesh2dPipelineKey::NONE,
     }
@@ -726,6 +741,7 @@ pub fn specialize_material2d_meshes<M: Material2d>(
                 | Mesh2dPipelineKey::from_primitive_topology(mesh.primitive_topology())
                 | material_2d.properties.mesh_pipeline_key_bits;
 
+            // 这里获取的是一个特定的渲染管线，可以在这个位置自定义特定渲染管线
             let pipeline_id = pipelines.specialize(
                 &pipeline_cache,
                 &material2d_pipeline,
@@ -867,7 +883,12 @@ pub fn queue_material2d_meshes<M: Material2d>(
                         current_change_tick,
                     );
                 }
-                AlphaMode2d::Blend => {
+                AlphaMode2d::Blend
+                | AlphaMode2d::Add
+                | AlphaMode2d::Screen
+                | AlphaMode2d::Lighten
+                | AlphaMode2d::Subtract
+                | AlphaMode2d::Multiply => {
                     transparent_phase.add(Transparent2d {
                         entity: (*render_entity, *visible_entity),
                         draw_function: material_2d.properties.draw_function_id,
@@ -955,7 +976,12 @@ impl<M: Material2d> RenderAsset for PreparedMaterial2d<M> {
                     AlphaMode2d::Mask(_) => {
                         alpha_mask_draw_functions.read().id::<DrawMaterial2d<M>>()
                     }
-                    AlphaMode2d::Blend => {
+                    AlphaMode2d::Blend
+                    | AlphaMode2d::Add
+                    | AlphaMode2d::Screen
+                    | AlphaMode2d::Lighten
+                    | AlphaMode2d::Subtract
+                    | AlphaMode2d::Multiply => {
                         transparent_draw_functions.read().id::<DrawMaterial2d<M>>()
                     }
                 };

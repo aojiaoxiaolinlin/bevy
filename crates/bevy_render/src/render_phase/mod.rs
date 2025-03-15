@@ -92,6 +92,7 @@ where
 /// This flavor of render phase is used for phases in which the ordering is less
 /// critical: for example, `Opaque3d`. It's generally faster than the
 /// alternative [`SortedRenderPhase`].
+/// zh-CN:渲染不透明的phases。例如[`Opaque3d`]、[`Opaque2d`]
 pub struct BinnedRenderPhase<BPI>
 where
     BPI: BinnedPhaseItem,

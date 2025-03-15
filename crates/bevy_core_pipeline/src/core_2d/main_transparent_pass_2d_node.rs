@@ -36,7 +36,7 @@ impl ViewNode for MainTransparentPass2dNode {
         else {
             return Ok(());
         };
-
+        // TODO: 渲染图
         let view_entity = graph.view_entity();
         let Some(transparent_phase) = transparent_phases.get(&view.retained_view_entity) else {
             return Ok(());
@@ -81,6 +81,7 @@ impl ViewNode for MainTransparentPass2dNode {
                     #[cfg(feature = "trace")]
                     let _transparent_main_pass_2d_span =
                         info_span!("transparent_main_pass_2d").entered();
+                    // TODO: 渲染透明物体  SortedRenderPhase
                     if let Err(err) = transparent_phase.render(&mut render_pass, world, view_entity)
                     {
                         error!(

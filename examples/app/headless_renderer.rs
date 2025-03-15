@@ -63,7 +63,7 @@ struct AppConfig {
     height: u32,
     single_image: bool,
 }
-
+// TODO: 是个好例子，用于渲染将分割的图像合并成一个完整的图像，Swf定义的graph 就是分成多个图像，然后合并成一个完整的图像。
 fn main() {
     let config = AppConfig {
         width: 1920,
