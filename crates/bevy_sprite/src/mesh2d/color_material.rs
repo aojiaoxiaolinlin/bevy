@@ -144,7 +144,8 @@ impl AsBindGroupShaderType<ColorMaterialUniform> for ColorMaterial {
             | AlphaMode2d::Screen
             | AlphaMode2d::Lighten
             | AlphaMode2d::Subtract
-            | AlphaMode2d::Multiply => flags |= ColorMaterialFlags::ALPHA_MODE_BLEND,
+            | AlphaMode2d::Multiply
+            | AlphaMode2d::Darken => flags |= ColorMaterialFlags::ALPHA_MODE_BLEND,
         };
         ColorMaterialUniform {
             color: LinearRgba::from(self.color).to_f32_array().into(),

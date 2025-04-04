@@ -257,6 +257,9 @@ pub enum AlphaMode2d {
     Subtract,
     /// 变亮
     Lighten,
+    /// 变暗
+    Darken,
+    /// 正片叠底
     Multiply,
 }
 
@@ -887,7 +890,8 @@ pub fn queue_material2d_meshes<M: Material2d>(
                 | AlphaMode2d::Screen
                 | AlphaMode2d::Lighten
                 | AlphaMode2d::Subtract
-                | AlphaMode2d::Multiply => {
+                | AlphaMode2d::Multiply
+                | AlphaMode2d::Darken => {
                     transparent_phase.add(Transparent2d {
                         entity: (*render_entity, *visible_entity),
                         draw_function: material_2d.properties.draw_function_id,
@@ -981,7 +985,8 @@ impl<M: Material2d> RenderAsset for PreparedMaterial2d<M> {
                     | AlphaMode2d::Screen
                     | AlphaMode2d::Lighten
                     | AlphaMode2d::Subtract
-                    | AlphaMode2d::Multiply => {
+                    | AlphaMode2d::Multiply
+                    | AlphaMode2d::Darken => {
                         transparent_draw_functions.read().id::<DrawMaterial2d<M>>()
                     }
                 };

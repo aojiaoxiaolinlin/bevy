@@ -599,12 +599,12 @@ pub struct ViewUniformOffset {
 
 #[derive(Component)]
 pub struct ViewTarget {
-    main_textures: MainTargetTextures,
-    main_texture_format: TextureFormat,
+    pub main_textures: MainTargetTextures,
+    pub main_texture_format: TextureFormat,
     /// 0 represents `main_textures.a`, 1 represents `main_textures.b`
     /// This is shared across view targets with the same render target
-    main_texture: Arc<AtomicUsize>,
-    out_texture: OutputColorAttachment,
+    pub main_texture: Arc<AtomicUsize>,
+    pub out_texture: OutputColorAttachment,
 }
 
 /// Contains [`OutputColorAttachment`] used for each target present on any view in the current
@@ -961,12 +961,12 @@ pub fn prepare_view_uniforms(
 }
 
 #[derive(Clone)]
-struct MainTargetTextures {
-    a: ColorAttachment,
-    b: ColorAttachment,
+pub struct MainTargetTextures {
+    pub a: ColorAttachment,
+    pub b: ColorAttachment,
     /// 0 represents `main_textures.a`, 1 represents `main_textures.b`
     /// This is shared across view targets with the same render target
-    main_texture: Arc<AtomicUsize>,
+    pub main_texture: Arc<AtomicUsize>,
 }
 
 /// Prepares the view target [`OutputColorAttachment`] for each view in the current frame.
