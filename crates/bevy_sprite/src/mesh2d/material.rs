@@ -19,7 +19,7 @@ use bevy_ecs::{
     system::{lifetimeless::SRes, SystemParamItem},
 };
 use bevy_math::FloatOrd;
-use bevy_platform_support::collections::HashMap;
+use bevy_platform::collections::HashMap;
 use bevy_reflect::{prelude::ReflectDefault, Reflect};
 use bevy_render::camera::extract_cameras;
 use bevy_render::render_phase::{DrawFunctionId, InputUniformIndex};
@@ -582,11 +582,9 @@ pub fn extract_entities_needs_specialization<M>(
 ) where
     M: Material2d,
 {
-    for entity in entities_needing_specialization.iter() {
-        // Update the entity's specialization tick with this run's tick
-        entity_specialization_ticks.insert((*entity).into(), ticks.this_run());
-    }
-    // Clean up any despawned entities
+    // Clean up any despawned entities, we do this first in case the removed material was re-added
+    // the same frame, thus will appear both in the removed components list and have been added to
+    // the `EntitiesNeedingSpecialization` collection by triggering the `Changed` filter
     for entity in removed_mesh_material_components.read() {
         entity_specialization_ticks.remove(&MainEntity::from(entity));
         for view in views {
@@ -594,6 +592,10 @@ pub fn extract_entities_needs_specialization<M>(
                 cache.remove(&MainEntity::from(entity));
             }
         }
+    }
+    for entity in entities_needing_specialization.iter() {
+        // Update the entity's specialization tick with this run's tick
+        entity_specialization_ticks.insert((*entity).into(), ticks.this_run());
     }
 }
 
@@ -740,6 +742,9 @@ pub fn specialize_material2d_meshes<M: Material2d>(
             let Some(material_asset_id) = render_material_instances.get(visible_entity) else {
                 continue;
             };
+            let Some(mesh_instance) = render_mesh_instances.get_mut(visible_entity) else {
+                continue;
+            };
             let entity_tick = entity_specialization_ticks.get(visible_entity).unwrap();
             let last_specialized_tick = view_specialized_material_pipeline_cache
                 .get(visible_entity)
@@ -751,9 +756,6 @@ pub fn specialize_material2d_meshes<M: Material2d>(
             if !needs_specialization {
                 continue;
             }
-            let Some(mesh_instance) = render_mesh_instances.get_mut(visible_entity) else {
-                continue;
-            };
             let Some(material_2d) = render_materials.get(*material_asset_id) else {
                 continue;
             };
